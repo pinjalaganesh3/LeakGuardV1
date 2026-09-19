@@ -1,0 +1,19 @@
+# Build settings for the LeakGuard frontend.
+# The site's base directory is `frontend`, so Netlify reads this file from here.
+
+[build.environment]
+  # VITE_API_BASE_URL is a browser-side API base URL. Vite inlines every VITE_*
+  # variable into the client bundle by design, and the value is visible to any
+  # end user inspecting network requests, so it is not a secret. Exclude just
+  # this key from secrets scanning instead of disabling the scan or skipping
+  # whole paths. See https://ntl.fyi/configure-secrets-scanning
+  SECRETS_SCAN_OMIT_KEYS = "VITE_API_BASE_URL"
+
+# The app uses react-router's BrowserRouter, so routes like /alerts and /rules
+# exist only on the client. Without this rewrite, a direct visit or refresh on
+# any route other than / returns a 404. Netlify serves matching static files
+# (e.g. /assets/*) before applying this rule, so bundles are unaffected.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
