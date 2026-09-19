@@ -1,0 +1,10 @@
+# Build command and publish directory are configured in the Netlify UI.
+# This file only supplies build-time environment settings.
+
+[build.environment]
+  # VITE_API_BASE_URL is the public base URL of the LeakGuard API. Vite inlines
+  # every VITE_* variable into the client bundle at build time, so this value is
+  # necessarily visible in the browser and is not a secret. Exclude it from
+  # secrets scanning so the deploy does not fail on the inlined value.
+  # https://ntl.fyi/configure-secrets-scanning
+  SECRETS_SCAN_OMIT_KEYS = "VITE_API_BASE_URL"
