@@ -2,12 +2,16 @@ from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import sessionmaker, declarative_base
 from backend.config import settings
 
+database_url = settings.DATABASE_URL
+if database_url.startswith("postgresql://"):
+    database_url = database_url.replace("postgresql://", "postgresql+psycopg://", 1)
+
 # SQLite needs this option for FastAPI's worker threads; PostgreSQL rejects it.
 engine_options = {}
-if settings.DATABASE_URL.startswith("sqlite"):
+if database_url.startswith("sqlite"):
     engine_options["connect_args"] = {"check_same_thread": False}
 
-engine = create_engine(settings.DATABASE_URL, **engine_options)
+engine = create_engine(database_url, **engine_options)
 
 # SessionLocal is a factory for new database sessions
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
