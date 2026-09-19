@@ -4,15 +4,22 @@ export const apiUrl = (path) => /^https?:\/\//i.test(path) ? path : `${API_BASE_
 
 export async function apiFetch(path, options = {}) {
   let response;
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 15000);
   try {
     response = await fetch(apiUrl(path), {
       credentials: 'include',
+      signal: controller.signal,
       ...options,
     });
   } catch (error) {
-    const networkError = new Error('LeakGuard API is unavailable. Start the backend and try again.');
+    const networkError = new Error(error.name === 'AbortError'
+      ? 'LeakGuard API timed out. Check that the backend is running and reachable.'
+      : 'LeakGuard API is unavailable. Check the backend URL and try again.');
     window.dispatchEvent(new CustomEvent('leakguard:api-error', { detail: networkError.message }));
     throw networkError;
+  } finally {
+    window.clearTimeout(timeout);
   }
 
   if (!response.ok) {
