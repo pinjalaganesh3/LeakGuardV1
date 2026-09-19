@@ -1,0 +1,18 @@
+import React, { useState } from 'react';
+import { KeyRound, ShieldCheck, Copy, RefreshCw } from 'lucide-react';
+import { apiFetch } from '../lib/api';
+
+const Security = () => {
+  const [setup, setSetup] = useState(null);
+  const [code, setCode] = useState('');
+  const [resetToken, setResetToken] = useState('');
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+  const call = async (url, options = {}) => { const response = await apiFetch(url, options); return response.json(); };
+  const start2fa = async () => { try { setSetup(await call('/api/auth/2fa/setup', { method: 'POST' })); setMessage('Scan the secret with your authenticator app, then enter the code.'); } catch (e) { setError(e.message); } };
+  const enable2fa = async () => { try { await call('/api/auth/2fa/enable', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }) }); setMessage('Two-factor authentication enabled.'); setSetup(null); } catch (e) { setError(e.message); } };
+  const requestReset = async () => { try { const me = await call('/api/auth/me'); const data = await call('/api/auth/password-reset/request', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: me.email }) }); setResetToken(data.reset_token || ''); setMessage('Local password reset token generated.'); } catch (e) { setError(e.message); } };
+  return <div className="p-8 max-w-3xl mx-auto flex flex-col gap-6"><div><p className="text-xs font-mono tracking-widest text-cyan-400">ACCOUNT SECURITY</p><h1 className="text-3xl font-bold text-white mt-2">Security settings</h1><p className="text-slate-400 mt-1">Keep access to your local workspace under your control.</p></div>{message && <p className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-sm">{message}</p>}{error && <p className="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-300 text-sm">{error}</p>}<section className="glass-card p-5"><div className="flex items-center gap-3"><ShieldCheck className="text-cyan-400" /><div><h2 className="font-semibold text-white">Two-factor authentication</h2><p className="text-sm text-slate-400">Add a time-based code from an authenticator app.</p></div></div>{setup ? <div className="mt-5 flex flex-col gap-3"><p className="text-xs text-slate-400">Secret: <code className="text-cyan-300">{setup.secret}</code><button onClick={() => navigator.clipboard?.writeText(setup.secret)} className="ml-2 text-slate-400"><Copy size={14} /></button></p><input value={code} onChange={(e) => setCode(e.target.value)} placeholder="Enter 6-digit code" className="bg-[#0b1120] border border-white/10 rounded-lg px-3 py-2 text-sm text-white" /><button onClick={enable2fa} className="w-fit px-4 py-2 bg-cyan-600 text-white rounded-lg text-sm font-semibold">Enable 2FA</button></div> : <button onClick={start2fa} className="mt-5 flex items-center gap-2 px-4 py-2 bg-cyan-600 text-white rounded-lg text-sm font-semibold"><ShieldCheck size={16} /> Set up authenticator</button>}</section><section className="glass-card p-5"><div className="flex items-center gap-3"><KeyRound className="text-amber-400" /><div><h2 className="font-semibold text-white">Password recovery</h2><p className="text-sm text-slate-400">Generate a local reset token. Nothing is emailed externally.</p></div></div><button onClick={requestReset} className="mt-5 flex items-center gap-2 px-4 py-2 bg-white/10 text-slate-200 rounded-lg text-sm font-semibold"><RefreshCw size={16} /> Generate reset token</button>{resetToken && <code className="block mt-4 break-all text-xs text-amber-300 bg-[#0b1120] p-3 rounded">{resetToken}</code>}</section></div>;
+};
+
+export default Security;

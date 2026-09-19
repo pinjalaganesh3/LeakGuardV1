@@ -1,0 +1,12 @@
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.dll
+leakguard.db
+test_leakguard.db
+.env
+.env.*
+!.env.example
+frontend/node_modules/
+frontend/dist/

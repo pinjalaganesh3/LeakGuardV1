@@ -1,0 +1,32 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: leakguard
+      POSTGRES_USER: leakguard
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: .
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+psycopg://leakguard:${POSTGRES_PASSWORD}@db:5432/leakguard
+      ALLOWED_ORIGINS: '["${PUBLIC_ORIGIN}"]'
+      COOKIE_SECURE: "true"
+      ENABLE_SEMANTIC: "${ENABLE_SEMANTIC:-false}"
+    depends_on:
+      - db
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
